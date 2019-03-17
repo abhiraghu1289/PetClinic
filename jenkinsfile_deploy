@@ -1,0 +1,32 @@
+pipeline{
+    agent any
+        stages {
+            stage('sourcecode'){
+               steps{
+                   checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/abhiraghu1289/PetClinic.git']]]
+               } 
+            }
+            stage('Compile'){
+                steps{
+                    sh 'mvn compile'
+                }
+            }
+            stage('test'){
+                steps{
+                    sh 'mvn test'
+                }
+            }
+            stage('package'){
+                steps{
+                    sh 'mvn package'
+                }
+            }
+            stage('Deploy'){
+                steps{
+                    sshagent(['tomcat2']){
+                        sh 'ssh -o StrictHostKeyChecking=no target/*.war http://ec2-18-222-230-65.us-east-2.compute.amazonaws.com:/opt/apache-tomcat-7.0.93/webapps/'
+                    }
+                }
+            }
+        }
+}
